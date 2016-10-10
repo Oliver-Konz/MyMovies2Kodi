@@ -1,10 +1,13 @@
 package it.konz.mymovies2kodi.service.handler;
 
+import static it.konz.mymovies2kodi.model.MediaType.OTHER;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
@@ -13,6 +16,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import it.konz.mymovies2kodi.model.Disc;
 import it.konz.mymovies2kodi.model.IncludesExceludes;
+import it.konz.mymovies2kodi.model.MediaType;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -22,7 +26,7 @@ import lombok.val;
  * @author Oliver Konz - code(at)oliverkonz.de
  *
  */
-public abstract class SingleTitleHandler extends DefaultHandler {
+public class SingleTitleHandler extends DefaultHandler {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -37,9 +41,10 @@ public abstract class SingleTitleHandler extends DefaultHandler {
 		String imdb;
 		Set<String> categories = new HashSet<>();
 		boolean stereoscopic = false;
+		MediaType mediaType = OTHER;
 	}
 
-	private final @Getter Set<Disc> discs = new HashSet<>();
+	private final @Getter MultiValuedMap<MediaType, Disc> discs = new HashSetValuedHashMap<>();
 
 	private @NonNull @Setter IncludesExceludes<String> genreInEx = new IncludesExceludes<String>();
 	private @NonNull @Setter IncludesExceludes<String> locationInEx = new IncludesExceludes<String>();
@@ -48,8 +53,6 @@ public abstract class SingleTitleHandler extends DefaultHandler {
 	private TitleData titleData = null;
 	private boolean skipTitle = false;
 	private String currentTag = null;
-
-	protected abstract boolean checkMediaType(String mediaType);
 
 	@Override
 	public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
@@ -128,8 +131,10 @@ public abstract class SingleTitleHandler extends DefaultHandler {
 
 			switch (currentTag) {
 			case "MediaType":
-				if (!checkMediaType(content)) {
+				if (MediaType.TV_SERIES.getMyMoviesName().equals(content)) {
 					skipTitle = true;
+				} else {
+					titleData.mediaType = MediaType.byMyMoviesName(content);
 				}
 				break;
 
@@ -186,7 +191,7 @@ public abstract class SingleTitleHandler extends DefaultHandler {
 			if (!skipTitle && genreInEx.check(titleData.genres) && categoryInEx.check(titleData.categories)) {
 				val title = isNotBlank(titleData.localTitle) ? titleData.localTitle : titleData.originalTitle;
 				try {
-					discs.add(new Disc(title, titleData.year, titleData.type, titleData.stereoscopic, titleData.set, titleData.location, titleData.imdb));
+					discs.put(titleData.mediaType, new Disc(title, titleData.year, titleData.type, titleData.stereoscopic, titleData.set, titleData.location, titleData.imdb));
 				} catch (Exception e) {
 					log.error(String.format("Insufficient disc data for %s (%d).", title, titleData.year), e);
 				}

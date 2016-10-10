@@ -1,5 +1,10 @@
 package it.konz.mymovies2kodi.service;
 
+import static it.konz.mymovies2kodi.model.MediaType.DOCUEMENTARY;
+import static it.konz.mymovies2kodi.model.MediaType.MOVIE;
+import static it.konz.mymovies2kodi.model.MediaType.MUSIC;
+import static it.konz.mymovies2kodi.model.MediaType.OTHER;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
@@ -8,14 +13,14 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.commons.collections4.MultiValuedMap;
 import org.xml.sax.SAXException;
 
 import it.konz.mymovies2kodi.model.Disc;
 import it.konz.mymovies2kodi.model.IncludesExceludes;
-import it.konz.mymovies2kodi.service.handler.DocumentaryTitleHandler;
-import it.konz.mymovies2kodi.service.handler.MovieTitleHandler;
-import it.konz.mymovies2kodi.service.handler.MusicTitleHandler;
+import it.konz.mymovies2kodi.model.MediaType;
 import it.konz.mymovies2kodi.service.handler.SingleTitleHandler;
+import lombok.val;
 
 /**
  * Reads the exported MyMovies collection.xml and returns a {@link Set} of {@link Disc}s.
@@ -29,6 +34,8 @@ public class MyMoviesReader {
 	private final IncludesExceludes<String> genreInEx = new IncludesExceludes<>();
 	private final IncludesExceludes<String> locationInEx = new IncludesExceludes<>();
 	private final IncludesExceludes<String> categoryInEx = new IncludesExceludes<>();
+	
+	private MultiValuedMap<MediaType, Disc> singleTitleDiscs = null;
 
 	/**
 	 * Construct the {@link MyMoviesReader} for the given import file.
@@ -82,21 +89,6 @@ public class MyMoviesReader {
 		categoryInEx.addExcludes(categories);
 	}
 
-	private Set<Disc> readTitles(SingleTitleHandler titleHandler) {
-		titleHandler.setGenreInEx(genreInEx);
-		titleHandler.setLocationInEx(locationInEx);
-		titleHandler.setCategoryInEx(categoryInEx);
-
-		SAXParserFactory factory = SAXParserFactory.newInstance();
-		try {
-			SAXParser saxParser = factory.newSAXParser();
-			saxParser.parse(importFile, titleHandler);
-		} catch (ParserConfigurationException | SAXException | IOException e) {
-			throw new RuntimeException("Error reading movies from MyMovies collection XML.", e);
-		}
-		return titleHandler.getDiscs();
-	}
-
 	/**
 	 * Parse the collection.xml for movie titles.
 	 * 
@@ -104,7 +96,7 @@ public class MyMoviesReader {
 	 * @since 0.1.0
 	 */
 	public Set<Disc> readMovies() {
-		return readTitles(new MovieTitleHandler());
+		return getSingleTitles(MOVIE);
 	}
 
 	/**
@@ -114,7 +106,7 @@ public class MyMoviesReader {
 	 * @since 0.1.0
 	 */
 	public Set<Disc> readDocumentaries() {
-		return readTitles(new DocumentaryTitleHandler());
+		return getSingleTitles(DOCUEMENTARY);
 	}
 
 	/**
@@ -124,7 +116,40 @@ public class MyMoviesReader {
 	 * @since 0.1.0
 	 */
 	public Set<Disc> readMusicVideos() {
-		return readTitles(new MusicTitleHandler());
+		return getSingleTitles(MUSIC);
+	}
+	
+	/**
+	 * Parse the collection.xml for music titles.
+	 * 
+	 * @return the discs
+	 * @since 0.1.0
+	 */
+	public Set<Disc> readOtherVideos() {
+		return getSingleTitles(OTHER);
+	}
+	
+	private Set<Disc> getSingleTitles(MediaType mediaType) {
+		if (singleTitleDiscs == null) {
+			singleTitleDiscs = readSingleTitles();
+		}
+		return (Set<Disc>) singleTitleDiscs.get(mediaType);
 	}
 
+	private MultiValuedMap<MediaType, Disc> readSingleTitles() {
+		val titleHandler = new SingleTitleHandler();
+		titleHandler.setGenreInEx(genreInEx);
+		titleHandler.setLocationInEx(locationInEx);
+		titleHandler.setCategoryInEx(categoryInEx);
+		
+		SAXParserFactory factory = SAXParserFactory.newInstance();
+		try {
+			SAXParser saxParser = factory.newSAXParser();
+			saxParser.parse(importFile, titleHandler);
+		} catch (ParserConfigurationException | SAXException | IOException e) {
+			throw new RuntimeException("Error reading movies from MyMovies collection XML.", e);
+		}
+		return titleHandler.getDiscs();
+	}
 }
+

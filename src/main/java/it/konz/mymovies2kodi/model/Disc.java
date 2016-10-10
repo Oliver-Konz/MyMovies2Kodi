@@ -45,7 +45,7 @@ public class Disc {
 			}
 		}
 	}
-
+	
 	private final @NonNull String title;
 	private final Integer year;
 	private final @NonNull Type type;
