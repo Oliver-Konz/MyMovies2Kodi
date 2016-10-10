@@ -24,8 +24,16 @@ public class FirstTest {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	@Test
-	public void spielfilmeTest() {
+	public void exportAllTest() {
 		MyMoviesReader reader = new MyMoviesReader("target/test-classes/Collection.xml");
+		spielfilme(reader);
+		dokus(reader);
+		musik(reader);
+		sonstige(reader);
+		serien(reader);
+	}
+
+	public void spielfilme(MyMoviesReader reader) {
 		reader.addExcludeLocations("Dachzimmer");
 		reader.addExcludeCategories("Digital in HD");
 		Set<Disc> discs = reader.readMovies();
@@ -38,9 +46,7 @@ public class FirstTest {
 		}
 	}
 
-	@Test
-	public void dokusTest() {
-		MyMoviesReader reader = new MyMoviesReader("target/test-classes/Collection.xml");
+	public void dokus(MyMoviesReader reader) {
 		Set<Disc> discs = reader.readDocumentaries();
 		assertThat(discs, not(empty()));
 		log.info(String.format("There are %d docu discs in the collection.", discs.size()));
@@ -51,9 +57,7 @@ public class FirstTest {
 		}
 	}
 
-	@Test
-	public void musikTest() {
-		MyMoviesReader reader = new MyMoviesReader("target/test-classes/Collection.xml");
+	public void musik(MyMoviesReader reader) {
 		Set<Disc> discs = reader.readMusicVideos();
 		assertThat(discs, not(empty()));
 		log.info(String.format("There are %d music discs in the collection.", discs.size()));
@@ -65,9 +69,7 @@ public class FirstTest {
 		}
 	}
 
-	@Test
-	public void sonstigeTest() {
-		MyMoviesReader reader = new MyMoviesReader("target/test-classes/Collection.xml");
+	public void sonstige(MyMoviesReader reader) {
 		Set<Disc> discs = reader.readOtherVideos();
 		assertThat(discs, not(empty()));
 		log.info(String.format("There are %d other discs in the collection.", discs.size()));
@@ -79,9 +81,7 @@ public class FirstTest {
 		}
 	}
 
-	@Test
-	public void serienTest() {
-		MyMoviesReader reader = new MyMoviesReader("target/test-classes/Collection.xml");
+	public void serien(MyMoviesReader reader) {
 		Set<Disc> discs = reader.readTvSeries();
 		assertThat(discs, not(empty()));
 		log.info(String.format("There are %d TV series discs in the collection.", discs.size()));

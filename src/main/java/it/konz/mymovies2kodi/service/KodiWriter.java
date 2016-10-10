@@ -151,7 +151,7 @@ public class KodiWriter {
 			fileName.append(" (").append(disc.getYear()).append(')');
 		}
 		fileName.append('.').append(disc.getType().name().toLowerCase());
-		if (disc.isStereoscopic()) {
+		if (disc.getBlurayAdditions().isStereoscopic()) {
 			fileName.append(".3d");
 		}
 		return fileName.toString();

@@ -15,6 +15,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import it.konz.mymovies2kodi.model.Disc;
+import it.konz.mymovies2kodi.model.Disc.BlurayAdditions;
 import it.konz.mymovies2kodi.model.IncludesExceludes;
 import it.konz.mymovies2kodi.model.MediaType;
 import lombok.Getter;
@@ -40,7 +41,7 @@ public class TitleHandler extends DefaultHandler {
 		Set<String> genres = new HashSet<>();
 		String imdb;
 		Set<String> categories = new HashSet<>();
-		boolean stereoscopic = false;
+		BlurayAdditions blurayAdditions;
 		MediaType mediaType = OTHER;
 	}
 
@@ -60,67 +61,69 @@ public class TitleHandler extends DefaultHandler {
 			return;
 		}
 
-		switch (qName) {
-		case "DiscTitle":
+		if ("DiscTitle".equals(qName)) {
 			if (titleData != null) {
 				throw new IllegalStateException("Nested DiscTitle elements are not supported.");
 			}
 			titleData = new TitleData();
-			break;
 
-		case "ParentTitle":
-			val set = attributes.getValue("Title");
-			if (isNotBlank(set)) {
-				titleData.set = set.trim();
-			} else {
-				log.warn("Parent title exists but has no title.");
-			}
-			break;
+		} else if (titleData != null) {
 
-		case "PersonalData":
-			val group = attributes.getValue("Group");
-			if (!"Owned".equals(group)) {
-				skipTitle = true;
+			switch (qName) {
+			case "ParentTitle":
+				val set = attributes.getValue("Title");
+				if (isNotBlank(set)) {
+					titleData.set = set.trim();
+				} else {
+					log.warn("Parent title exists but has no title.");
+				}
+				break;
+
+			case "PersonalData":
+				val group = attributes.getValue("Group");
+				if (!"Owned".equals(group)) {
+					skipTitle = true;
+					break;
+				}
+
+				val location = attributes.getValue("Location").trim();
+				if (isNotBlank(location)) {
+					if (locationInEx.check(location)) {
+						titleData.location = location;
+					} else {
+						skipTitle = true;
+					}
+				}
+				break;
+
+			case "ChildTitle":
+				skipTitle = true; // We want the child titles, not the parent.
+				break;
+
+			case "Type":
+				if (titleData.blurayAdditions == null) {
+					val stereoscopic = Boolean.parseBoolean(attributes.getValue("BluRay3D"));
+					val masteredIn4K = Boolean.parseBoolean(attributes.getValue("MasteredIn4K"));
+					titleData.blurayAdditions = BlurayAdditions.byStereo4K(stereoscopic, masteredIn4K);
+				}
+				// fall through
+
+			case "MediaType":
+			case "LocalTitle":
+			case "OriginalTitle":
+			case "ProductionYear":
+			case "Genre":
+			case "IMDB":
+			case "Category":
+				currentTag = qName;
 				break;
 			}
-
-			val location = attributes.getValue("Location").trim();
-			if (isNotBlank(location)) {
-				if (locationInEx.check(location)) {
-					titleData.location = location;
-				} else {
-					skipTitle = true;
-				}
-			}
-			break;
-
-		case "ChildTitle":
-			skipTitle = true; // We want the child titles, not the parent.
-			break;
-
-		case "Type":
-			currentTag = qName;
-			String stereoscopic = attributes.getValue("BluRay3D");
-			if (isNotBlank(stereoscopic)) {
-				titleData.stereoscopic = Boolean.parseBoolean(stereoscopic);
-			}
-			break;
-
-		case "MediaType":
-		case "LocalTitle":
-		case "OriginalTitle":
-		case "ProductionYear":
-		case "Genre":
-		case "IMDB":
-		case "Category":
-			currentTag = qName;
-			break;
 		}
 	}
 
 	@Override
 	public void characters(char[] ch, int start, int length) throws SAXException {
-		if (skipTitle || currentTag == null) {
+		if (titleData == null || skipTitle || currentTag == null) {
 			return;
 		}
 
@@ -188,7 +191,7 @@ public class TitleHandler extends DefaultHandler {
 				val title = isNotBlank(titleData.localTitle) ? titleData.localTitle : titleData.originalTitle;
 				try {
 					discs.put(titleData.mediaType,
-							new Disc(title, titleData.year, titleData.type, titleData.stereoscopic, titleData.set, titleData.location, titleData.imdb));
+							new Disc(title, titleData.year, titleData.type, titleData.blurayAdditions, titleData.set, titleData.location, titleData.imdb));
 				} catch (Exception e) {
 					log.error(String.format("Insufficient disc data for %s (%d).", title, titleData.year), e);
 				}
