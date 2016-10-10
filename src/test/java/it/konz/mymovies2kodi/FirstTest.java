@@ -64,4 +64,32 @@ public class FirstTest {
 			writer.write(disc);
 		}
 	}
+
+	@Test
+	public void sonstigeTest() {
+		MyMoviesReader reader = new MyMoviesReader("target/test-classes/Collection.xml");
+		Set<Disc> discs = reader.readOtherVideos();
+		assertThat(discs, not(empty()));
+		log.info(String.format("There are %d other discs in the collection.", discs.size()));
+
+		KodiWriter writer = new KodiWriter("Z:/Discs/Sonstige", Mode.CLEAR);
+		// writer.setWriteImdbNfo(true);
+		for (Disc disc : discs) {
+			writer.write(disc);
+		}
+	}
+
+	@Test
+	public void serienTest() {
+		MyMoviesReader reader = new MyMoviesReader("target/test-classes/Collection.xml");
+		Set<Disc> discs = reader.readTvSeries();
+		assertThat(discs, not(empty()));
+		log.info(String.format("There are %d TV series discs in the collection.", discs.size()));
+
+		KodiWriter writer = new KodiWriter("Z:/Discs/Serien", Mode.CLEAR);
+		// writer.setWriteImdbNfo(true);
+		for (Disc disc : discs) {
+			writer.write(disc);
+		}
+	}
 }

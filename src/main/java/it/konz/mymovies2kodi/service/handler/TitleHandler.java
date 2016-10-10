@@ -26,7 +26,7 @@ import lombok.val;
  * @author Oliver Konz - code(at)oliverkonz.de
  *
  */
-public class SingleTitleHandler extends DefaultHandler {
+public class TitleHandler extends DefaultHandler {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -131,11 +131,7 @@ public class SingleTitleHandler extends DefaultHandler {
 
 			switch (currentTag) {
 			case "MediaType":
-				if (MediaType.TV_SERIES.getMyMoviesName().equals(content)) {
-					skipTitle = true;
-				} else {
-					titleData.mediaType = MediaType.byMyMoviesName(content);
-				}
+				titleData.mediaType = MediaType.byMyMoviesName(content);
 				break;
 
 			case "Type":
@@ -191,7 +187,8 @@ public class SingleTitleHandler extends DefaultHandler {
 			if (!skipTitle && genreInEx.check(titleData.genres) && categoryInEx.check(titleData.categories)) {
 				val title = isNotBlank(titleData.localTitle) ? titleData.localTitle : titleData.originalTitle;
 				try {
-					discs.put(titleData.mediaType, new Disc(title, titleData.year, titleData.type, titleData.stereoscopic, titleData.set, titleData.location, titleData.imdb));
+					discs.put(titleData.mediaType,
+							new Disc(title, titleData.year, titleData.type, titleData.stereoscopic, titleData.set, titleData.location, titleData.imdb));
 				} catch (Exception e) {
 					log.error(String.format("Insufficient disc data for %s (%d).", title, titleData.year), e);
 				}

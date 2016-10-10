@@ -1,9 +1,10 @@
 package it.konz.mymovies2kodi.service;
 
-import static it.konz.mymovies2kodi.model.MediaType.DOCUEMENTARY;
+import static it.konz.mymovies2kodi.model.MediaType.DOCUMENTARY;
 import static it.konz.mymovies2kodi.model.MediaType.MOVIE;
 import static it.konz.mymovies2kodi.model.MediaType.MUSIC;
 import static it.konz.mymovies2kodi.model.MediaType.OTHER;
+import static it.konz.mymovies2kodi.model.MediaType.TV_SERIES;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +20,7 @@ import org.xml.sax.SAXException;
 import it.konz.mymovies2kodi.model.Disc;
 import it.konz.mymovies2kodi.model.IncludesExceludes;
 import it.konz.mymovies2kodi.model.MediaType;
-import it.konz.mymovies2kodi.service.handler.SingleTitleHandler;
+import it.konz.mymovies2kodi.service.handler.TitleHandler;
 import lombok.val;
 
 /**
@@ -34,7 +35,7 @@ public class MyMoviesReader {
 	private final IncludesExceludes<String> genreInEx = new IncludesExceludes<>();
 	private final IncludesExceludes<String> locationInEx = new IncludesExceludes<>();
 	private final IncludesExceludes<String> categoryInEx = new IncludesExceludes<>();
-	
+
 	private MultiValuedMap<MediaType, Disc> singleTitleDiscs = null;
 
 	/**
@@ -96,7 +97,7 @@ public class MyMoviesReader {
 	 * @since 0.1.0
 	 */
 	public Set<Disc> readMovies() {
-		return getSingleTitles(MOVIE);
+		return getTitles(MOVIE);
 	}
 
 	/**
@@ -106,7 +107,7 @@ public class MyMoviesReader {
 	 * @since 0.1.0
 	 */
 	public Set<Disc> readDocumentaries() {
-		return getSingleTitles(DOCUEMENTARY);
+		return getTitles(DOCUMENTARY);
 	}
 
 	/**
@@ -116,9 +117,19 @@ public class MyMoviesReader {
 	 * @since 0.1.0
 	 */
 	public Set<Disc> readMusicVideos() {
-		return getSingleTitles(MUSIC);
+		return getTitles(MUSIC);
 	}
-	
+
+	/**
+	 * Parse the collection.xml for TV series titles.
+	 * 
+	 * @return the discs
+	 * @since 0.1.0
+	 */
+	public Set<Disc> readTvSeries() {
+		return getTitles(TV_SERIES);
+	}
+
 	/**
 	 * Parse the collection.xml for music titles.
 	 * 
@@ -126,30 +137,29 @@ public class MyMoviesReader {
 	 * @since 0.1.0
 	 */
 	public Set<Disc> readOtherVideos() {
-		return getSingleTitles(OTHER);
+		return getTitles(OTHER);
 	}
-	
-	private Set<Disc> getSingleTitles(MediaType mediaType) {
+
+	private Set<Disc> getTitles(MediaType mediaType) {
 		if (singleTitleDiscs == null) {
-			singleTitleDiscs = readSingleTitles();
+			singleTitleDiscs = readTitles();
 		}
 		return (Set<Disc>) singleTitleDiscs.get(mediaType);
 	}
 
-	private MultiValuedMap<MediaType, Disc> readSingleTitles() {
-		val titleHandler = new SingleTitleHandler();
+	private MultiValuedMap<MediaType, Disc> readTitles() {
+		val titleHandler = new TitleHandler();
 		titleHandler.setGenreInEx(genreInEx);
 		titleHandler.setLocationInEx(locationInEx);
 		titleHandler.setCategoryInEx(categoryInEx);
-		
+
 		SAXParserFactory factory = SAXParserFactory.newInstance();
 		try {
 			SAXParser saxParser = factory.newSAXParser();
 			saxParser.parse(importFile, titleHandler);
 		} catch (ParserConfigurationException | SAXException | IOException e) {
-			throw new RuntimeException("Error reading movies from MyMovies collection XML.", e);
+			throw new RuntimeException("Error reading movies from MyMovies Collection.xml", e);
 		}
 		return titleHandler.getDiscs();
 	}
 }
-

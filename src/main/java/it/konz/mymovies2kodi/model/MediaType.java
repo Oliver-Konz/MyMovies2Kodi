@@ -9,14 +9,10 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public enum MediaType {
-	MOVIE("Movie"),
-	DOCUEMENTARY("Documentary"),
-	MUSIC("Music"),
-	TV_SERIES("TV Series"),
-	OTHER("Other");
-	
+	MOVIE("Movie"), DOCUMENTARY("Documentary"), MUSIC("Music"), TV_SERIES("TV Serie"), OTHER("Other");
+
 	private static Map<String, MediaType> mapByMyMoviesName;
-	
+
 	public static MediaType byMyMoviesName(String name) {
 		if (mapByMyMoviesName == null) {
 			mapByMyMoviesName = new DefaultedMap<String, MediaType>(OTHER);
@@ -26,7 +22,7 @@ public enum MediaType {
 		}
 		return mapByMyMoviesName.get(name);
 	}
-	
+
 	private final @Getter String myMoviesName;
-	
+
 }
