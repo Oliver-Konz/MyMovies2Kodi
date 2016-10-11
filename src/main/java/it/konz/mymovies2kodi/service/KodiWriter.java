@@ -151,6 +151,9 @@ public class KodiWriter {
 			fileName.append(" (").append(disc.getYear()).append(')');
 		}
 		fileName.append('.').append(disc.getType().name().toLowerCase());
+		if (disc.getBlurayAdditions().isMasteredIn4K()) {
+			fileName.append(".4kmaster");
+		}
 		if (disc.getBlurayAdditions().isStereoscopic()) {
 			fileName.append(".3d");
 		}
