@@ -14,10 +14,11 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import it.konz.mymovies2kodi.model.BlurayAdditions;
 import it.konz.mymovies2kodi.model.Disc;
-import it.konz.mymovies2kodi.model.Disc.BlurayAdditions;
 import it.konz.mymovies2kodi.model.IncludesExceludes;
 import it.konz.mymovies2kodi.model.MediaType;
+import it.konz.mymovies2kodi.model.DiscType;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -35,7 +36,7 @@ public class TitleHandler extends DefaultHandler {
 		String localTitle;
 		String originalTitle;
 		Integer year;
-		Disc.Type type;
+		DiscType type;
 		String set;
 		String location;
 		Set<String> genres = new HashSet<>();
@@ -139,7 +140,7 @@ public class TitleHandler extends DefaultHandler {
 
 			case "Type":
 				if (titleData.type == null) { // There are other type attributes later (person) and the correct one should not be overwritten.
-					titleData.type = Disc.Type.byMyMoviesType(content);
+					titleData.type = DiscType.byMyMoviesType(content);
 				}
 				break;
 
