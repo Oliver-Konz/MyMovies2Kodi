@@ -26,10 +26,10 @@ public class FirstTest {
 	@Test
 	public void exportAllTest() {
 		MyMoviesReader reader = new MyMoviesReader("target/test-classes/Collection.xml");
-		spielfilme(reader);
-		dokus(reader);
-		musik(reader);
-		sonstige(reader);
+		// spielfilme(reader);
+		// dokus(reader);
+		// musik(reader);
+		// sonstige(reader);
 		serien(reader);
 	}
 
@@ -86,7 +86,7 @@ public class FirstTest {
 		assertThat(discs, not(empty()));
 		log.info(String.format("There are %d TV series discs in the collection.", discs.size()));
 
-		KodiWriter writer = new KodiWriter("Z:/Discs/Serien", Mode.CLEAR);
+		KodiWriter writer = new KodiWriter("Z:/Discs/Serientitel", Mode.CLEAR);
 		// writer.setWriteImdbNfo(true);
 		for (Disc disc : discs) {
 			writer.write(disc);
