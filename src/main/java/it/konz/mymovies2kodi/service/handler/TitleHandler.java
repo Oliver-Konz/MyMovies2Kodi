@@ -16,9 +16,9 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import it.konz.mymovies2kodi.model.BlurayAdditions;
 import it.konz.mymovies2kodi.model.Disc;
+import it.konz.mymovies2kodi.model.DiscType;
 import it.konz.mymovies2kodi.model.IncludesExceludes;
 import it.konz.mymovies2kodi.model.MediaType;
-import it.konz.mymovies2kodi.model.DiscType;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -191,8 +191,8 @@ public class TitleHandler extends DefaultHandler {
 			if (!skipTitle && genreInEx.check(titleData.genres) && categoryInEx.check(titleData.categories)) {
 				val title = isNotBlank(titleData.localTitle) ? titleData.localTitle : titleData.originalTitle;
 				try {
-					discs.put(titleData.mediaType,
-							new Disc(title, titleData.year, titleData.type, titleData.blurayAdditions, titleData.set, titleData.location, titleData.imdb));
+					discs.put(titleData.mediaType, new Disc(titleData.mediaType, title, titleData.year, titleData.type, titleData.blurayAdditions,
+							titleData.set, titleData.location, titleData.imdb));
 				} catch (Exception e) {
 					log.error(String.format("Insufficient disc data for %s (%d).", title, titleData.year), e);
 				}

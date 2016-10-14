@@ -22,6 +22,7 @@ import lombok.ToString;
 @ToString
 public class Disc {
 
+	private final @NonNull MediaType mediaType;
 	private final @NonNull String title;
 	private final Integer year;
 	private final @NonNull DiscType type;

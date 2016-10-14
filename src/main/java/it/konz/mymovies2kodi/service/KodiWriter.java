@@ -1,5 +1,6 @@
 package it.konz.mymovies2kodi.service;
 
+import static it.konz.mymovies2kodi.model.MediaType.TV_SERIES;
 import static it.konz.mymovies2kodi.service.KodiWriter.Mode.CLEAR;
 import static it.konz.mymovies2kodi.service.KodiWriter.Mode.OVERWRITE;
 
@@ -76,6 +77,11 @@ public class KodiWriter {
 	private void initialize() {
 		if (mode == CLEAR) {
 			clearOutputDir();
+			try {
+				Thread.sleep(2000L); // Network share needs some time to delete the files...
+			} catch (InterruptedException e) {
+				// Doesn't matter
+			}
 		}
 		initialized = true;
 	}
@@ -126,7 +132,7 @@ public class KodiWriter {
 				throw new RuntimeException(String.format("Error writing file \"%s\".", discFileName), e);
 			}
 		} else {
-			log.debug(String.format("Not writing file \"%s\" because it already exists.", discFileName));
+			log.info(String.format("Not writing file \"%s\" because it already exists.", discFileName));
 		}
 
 		if (writeImdbNfo && StringUtils.isNotBlank(disc.getImdbId())) {
@@ -173,6 +179,8 @@ public class KodiWriter {
 		contents.append("<discstub>\n");
 		if (disc.getSet() != null) {
 			contents.append("\t<title>").append(setPrefix).append(": ").append(disc.getSet()).append("</title>\n");
+		} else if (TV_SERIES.equals(disc.getMediaType())) {
+			contents.append("\t<title>").append(setPrefix).append(": ").append(disc.getTitle()).append("</title>\n");
 		}
 		if (disc.getLocation() != null) {
 			contents.append("\t<message>").append(locationPrefix).append(": ").append(disc.getLocation()).append("</message>\n");
