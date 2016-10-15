@@ -25,7 +25,6 @@ import lombok.val;
  * @author Oliver Konz - code(at)oliverkonz.de
  * @since 0.1.0
  */
-@Setter
 public class KodiWriter {
 
 	/**
@@ -53,9 +52,12 @@ public class KodiWriter {
 	private final File outputDir;
 	private final Mode mode;
 
-	private @NonNull String setPrefix = "Set";
-	private @NonNull String locationPrefix = "Location";
-	private boolean writeImdbNfo = false;
+	private @Setter @NonNull String setPrefix = "Set";
+	private @Setter @NonNull String locationPrefix = "Location";
+	private @Setter boolean writeImdbNfo = false;
+	private @Setter long retryInterval = 2000L;
+	private @Setter int maxRetries = 100;
+
 	private boolean initialized = false;
 
 	/**
@@ -78,7 +80,7 @@ public class KodiWriter {
 		if (mode == CLEAR) {
 			clearOutputDir();
 			try {
-				Thread.sleep(2000L); // Network share needs some time to delete the files...
+				Thread.sleep(retryInterval); // Network share needs some time to delete the files...
 			} catch (InterruptedException e) {
 				// Doesn't matter
 			}
@@ -122,8 +124,27 @@ public class KodiWriter {
 		val fileBaseName = buildFileName(disc);
 		val discFileName = fileBaseName + ".disc";
 		val nfoFileName = fileBaseName + ".nfo";
+		val videoFileName = fileBaseName + ".mkv";
+
+		val videoFile = new File(outputDir, videoFileName);
+		if (videoFile.exists()) {
+			log.info(String.format("Not writing file \"%s\" because a video file already exists.", discFileName));
+			return;
+		}
 
 		val discFile = new File(outputDir, discFileName);
+
+		int retries = 0;
+		while (mode == CLEAR && discFile.exists() && retries < maxRetries) {
+			log.info(String.format("Waiting for \"%s\" to be deleted.", discFileName));
+			retries++;
+			try {
+				Thread.sleep(retryInterval);
+			} catch (InterruptedException e) {
+				// Doesn't matter
+			}
+		}
+
 		if (!discFile.exists() || mode == OVERWRITE) {
 			log.info(String.format("Writing file \"%s\"...", discFileName));
 			try {
@@ -132,7 +153,12 @@ public class KodiWriter {
 				throw new RuntimeException(String.format("Error writing file \"%s\".", discFileName), e);
 			}
 		} else {
-			log.info(String.format("Not writing file \"%s\" because it already exists.", discFileName));
+			val message = String.format("Not writing file \"%s\" because it already exists.", discFileName);
+			if (mode == CLEAR) {
+				log.error(message);
+			} else {
+				log.info(message);
+			}
 		}
 
 		if (writeImdbNfo && StringUtils.isNotBlank(disc.getImdbId())) {

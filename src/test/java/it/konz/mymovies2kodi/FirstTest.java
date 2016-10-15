@@ -26,10 +26,10 @@ public class FirstTest {
 	@Test
 	public void exportAllTest() {
 		MyMoviesReader reader = new MyMoviesReader("target/test-classes/Collection.xml");
-		// spielfilme(reader);
-		// dokus(reader);
-		// musik(reader);
-		// sonstige(reader);
+		spielfilme(reader);
+		dokus(reader);
+		musik(reader);
+		sonstige(reader);
 		serien(reader);
 	}
 
@@ -41,6 +41,7 @@ public class FirstTest {
 		log.info(String.format("There are %d movie discs in the collection.", discs.size()));
 
 		KodiWriter writer = new KodiWriter("Z:/Discs/Spielfilme", Mode.CLEAR);
+		// writer.setDelayAfterDelete(10000L);
 		for (Disc disc : discs) {
 			writer.write(disc);
 		}
